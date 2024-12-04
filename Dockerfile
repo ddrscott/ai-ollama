@@ -19,3 +19,5 @@ WORKDIR /app
 COPY . .
 RUN uv pip install --system -e .
 COPY bin/* /usr/local/bin/
+
+ENTRYPOINT ["oagent"]
