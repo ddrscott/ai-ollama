@@ -1,0 +1,20 @@
+[project]
+name = "oagent"
+version = "2024.0.0"
+dependencies = [
+  "click",
+  "rich",
+  "ollama",
+]
+requires-python = ">=3.11"
+authors = [
+  {name = "Scott Pierce", email = "ddrscott@gmail.com"},
+]
+description = "Agentic Coder"
+readme = "README.md"
+license = {file = "LICENSE.txt"}
+classifiers = [
+  "Programming Language :: Python"
+]
+[project.scripts]
+oagent = "oagent:cli.run"
