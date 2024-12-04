@@ -2,7 +2,7 @@ import ollama
 from . import utils
 from textwrap import dedent
 
-def shell(script):
+async def shell(script):
     """
     Execute a shell script in a sandboxed environment.
 
@@ -13,9 +13,10 @@ def shell(script):
       stdout (str): The standard output of the script
     """
 
-    yield from utils.execute_shell(script)
+    async for line in utils.aexecute_shell(script):
+        yield line
 
-def search(query):
+async def search(query):
     """
     Search DuckDuckGo for a query.
 
@@ -26,7 +27,7 @@ def search(query):
       results (str): The search results
     """
 
-    lines = [line for line in utils.execute_cmd('duckduckgo', query)]
+    lines = [line async for line in utils.aexecute_cmd('duckduckgo', query)]
     results = ''.join(lines)
     prompt = dedent(f"""\
         Given the following search results:
@@ -42,7 +43,7 @@ def search(query):
         if content := part['message']['content']:
             yield content
 
-def eval_python(expression):
+async def eval_python(expression):
     """
     Evaluate a Python script and print the results.
     Only printed results will be read!
@@ -54,9 +55,10 @@ def eval_python(expression):
       result (str): Printed output from the script.
     """
 
-    yield from utils.execute_cmd('python', '-c', expression)
+    async for line in utils.aexecute_cmd('python', '-c', expression):
+        yield line
 
-def web_text(url):
+async def web_text(url):
     """
     Get the text of a webpage.
 
@@ -66,7 +68,8 @@ def web_text(url):
     Returns:
       text (str): The text of the webpage
     """
-    yield from utils.execute_cmd('w3m', '-dump', '-cols', '9999', '-F', '-m', url)
+    async for line in utils.aexecute_cmd('w3m', '-dump', '-cols', '9999', '-F', '-m', url):
+        yield line
 
 
 ALL = {

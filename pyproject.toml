@@ -2,7 +2,8 @@
 name = "oagent"
 version = "2024.0.0"
 dependencies = [
-  "click",
+  "asyncclick",
+  "prompt_toolkit",
   "rich",
   "pyyaml",
   "ollama",

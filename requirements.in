@@ -1,4 +1,5 @@
-click
+asyncclick
 rich
 pyyaml
+prompt_toolkit
 ollama
