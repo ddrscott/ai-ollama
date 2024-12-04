@@ -31,7 +31,7 @@ ollama pull qwen2.5:14b
 ```sh
 # Use my docker hosted image
 docker run -it --rm \
-    -e OLLAMA_HOST=http://192.168.86.35:11434 \
+    -e OLLAMA_HOST=http://host.docker.internal:11434 \
     -e MODEL=qwen2.5:14b \
     ddrscott/oagent \
     'How much older is Tom Hanks than Tom Holland in days?'
@@ -41,7 +41,7 @@ docker run -it --rm \
 ```sh
 docker build . -t oagent && \
     docker run -it --rm \
-        -e OLLAMA_HOST=http://192.168.86.35:11434 \
+        -e OLLAMA_HOST=http://host.docker.internal:11434 \
         -v ${PWD}:/app \
         $_ --model 'qwen2.5:14b' '5 + 1 = ?, return in JSON format only'
 ```
