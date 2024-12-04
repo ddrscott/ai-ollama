@@ -18,7 +18,7 @@ console = Console()  # Initialize the Console instance for rich styling
 tool_dict = funk.ALL.copy()
 
 def handle_tools_call(messages, tool):
-    console.log( f"calling function: {tool.function})", style="cyan")
+    console.log(f"calling function: {tool.function})", style="cyan")
     if function_to_call := tool_dict.get(tool.function.name, None):
         parts = []
         with console.status(f"[green]Executing {tool.function.name} ...") as status:
@@ -49,7 +49,7 @@ def reply(messages, model, log_file):
         f.write('---\n')
         f.write(response.message.content)
 
-    console.log(f"{Text(response.message.content, style='bold green')}")
+    console.log(response.message.content, style='green')
     return response
 
 @click.command()
@@ -74,19 +74,26 @@ def run(question, model=MODEL):
                 All scripts must print to stdout for the result to get captured!
 
                 Current Date Time: {current_date}
+
+                After showing the final answer, you must say `/TERMINATE` to end the conversation!
             """),
         },
         {"role": "user", "content": question},
     ]
-    response = reply(messages, model, log_file)
 
-    while response.message.tool_calls:
-        messages.append(response.message)
-
-        for tool in response.message.tool_calls:
-            messages = handle_tools_call(messages, tool)
-
+    while True:
         response = reply(messages, model, log_file)
+
+        while response.message.tool_calls:
+            messages.append(response.message)
+
+            for tool in response.message.tool_calls:
+                messages = handle_tools_call(messages, tool)
+
+            response = reply(messages, model, log_file)
+
+        if '/TERMINATE' in response.message.content:
+            break
 
 if __name__ == "__main__":
     run()
