@@ -5,7 +5,7 @@ from typing import AsyncGenerator
 
 async def aexecute_shell(script_content: str, timeout: int = 600) -> AsyncGenerator[str, None]:
     logger = logging.getLogger(__name__)
-    shell_cmd = f"timeout {timeout} bash"
+    shell_cmd = f"timeout {timeout} bash -e"
     logger.info(f"Shell runner command: {shell_cmd}")
 
     # safe env vars
@@ -53,11 +53,7 @@ def execute_shell(script_content: str):
     except StopAsyncIteration:
         pass
 
-async def aexecute_cmd(cmd, *args, timeout: int = 600) -> AsyncGenerator[str, None]:
-    logger = logging.getLogger(__name__)
-    shell_cmd = f"timeout {timeout} bash"
-    logger.info(f"Shell runner command: {shell_cmd}")
-
+async def aexecute_cmd(cmd, *args) -> AsyncGenerator[str, None]:
     # safe env vars
     safe_env_keys = ['HOME', 'PATH', 'LANG', 'LC_ALL', 'LC_CTYPE', 'TOGETHER_API_KEY', 'USER_WWW']
     safe_env = {k: v for k, v in os.environ.items() if k in safe_env_keys}

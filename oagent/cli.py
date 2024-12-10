@@ -1,4 +1,3 @@
-import asyncio
 import asyncclick as click
 from prompt_toolkit import PromptSession
 from prompt_toolkit.styles import Style
@@ -17,7 +16,6 @@ style = Style([
 
 # Import rich components for styling console output
 from rich.console import Console
-from rich.text import Text
 
 MODEL = os.getenv('MODEL', 'llama3.1')
 LOG_DIR = os.getenv('LOG_DIR', 'tmp')
@@ -30,11 +28,11 @@ style = Style([
 
 session = PromptSession(history=FileHistory(REPL_HISTORY), style=style)
 
-console = Console()  # Initialize the Console instance for rich styling
+console = Console(file=open('/dev/tty', 'a'))  # Initialize the Console instance for rich styling
 
 tool_dict = funk.ALL.copy()
 
-async def handle_tools_call(messages, tool):
+async def handle_tools_call(messages, tool) -> list:
     console.log(f"calling function: {tool.function})", style="cyan")
     if function_to_call := tool_dict.get(tool.function.name, None):
         parts = []
@@ -72,7 +70,11 @@ def reply(messages, model, log_file):
 @click.command()
 @click.argument('question', nargs=-1, required=True)
 @click.option('--model', default=MODEL, help='The model to use')
-async def run(question, model=MODEL):
+@click.option('--no-repl', is_flag=True, help='Use REPL', default=False)
+async def main(question, model=MODEL, no_repl=False):
+    await run(question, model, no_repl)
+
+async def run(question, model=MODEL, no_repl=False):
     os.makedirs(LOG_DIR, exist_ok=True)
     session = PromptSession(history=FileHistory(REPL_HISTORY), style=style)
 
@@ -86,18 +88,20 @@ async def run(question, model=MODEL):
     messages = [
         {
             "role": "system",
-            "content": dedent(f"""
-                Act as a Linux Administrator skilled with terminal commands and Python scripting.
-                You always search for the latest information and use Python for computation and print results to stdout.
-                All scripts must print to stdout for the result to get captured!
-                Use `cat -n` to read contents of files accurately, before making any changes.
-                When making changes to files use `tee dst <<EOF` to write to files.
-                Accuracy is key, so always double-check your work before proceeding.
+            "content": \
+f"""\
+You are Linus Torvalds, the creator of Linux, 10x engineer, and extremely terse.
 
-                Current Date Time: {current_date}
-
-                After showing the final answer, you must say `/TERMINATE` to end the conversation!
-            """),
+Process {{
+- You answer questions by breaking them down into discrete steps
+- You can use the following tools: {', '.join(tool_dict.keys())}
+- `shell` is your favorite tool
+- After showing the final answer, you must say `/TERMINATE` to end the conversation!
+}}
+Context {{
+- Today is {current_date}
+}}
+""",
         },
         {"role": "user", "content": question},
     ]
@@ -114,11 +118,16 @@ async def run(question, model=MODEL):
             response = reply(messages, model, log_file)
 
         if '/TERMINATE' in response.message.content:
-            text = await session.prompt_async("> ", style=style)
-            if not text:
-                break
-            messages.append({"role": "user", "content": text})
-
+            if no_repl:
+                # remove the /TERMINATE command from the final output, and print it
+                content = response.message.content.replace('/TERMINATE', '').strip()
+                print(content, flush=True)
+                return content
+            else:
+                text = await session.prompt_async("> ", style=style)
+                if not text:
+                    break
+                messages.append({"role": "user", "content": text})
 
 if __name__ == "__main__":
-    run(_anyio_backend='asyncio')
+    main(_anyio_backend='asyncio')  # type: ignore

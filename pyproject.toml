@@ -17,5 +17,9 @@ readme = "README.md"
 classifiers = [
   "Programming Language :: Python"
 ]
+
+[tool.setuptools.packages.find]
+include = ["oagent"]
+
 [project.scripts]
-oagent = "oagent:cli.run"
+oagent = "oagent:cli.main"

@@ -2,34 +2,24 @@ import ollama
 from . import utils
 from textwrap import dedent
 
-async def shell(script):
+async def shell(script:str):
     """
     Execute a shell script in a sandboxed environment.
-
-    Args:
-      script (str): The shell script to execute
-
-    Returns:
-      stdout (str): The standard output of the script
+    - `cat -n /path/to/source` to read files.
+    - `cat <<-EOF | tee /path/to/dest` to write directly to files.
     """
 
     async for line in utils.aexecute_shell(script):
         yield line
 
-async def search(query):
+async def search(query:str):
     """
-    Search DuckDuckGo for a query.
-
-    Args:
-      query (str): The search query
-
-    Returns:
-      results (str): The search results
+    Search the internet using DuckDuckGo for one thing at a time.
     """
 
     lines = [line async for line in utils.aexecute_cmd('duckduckgo', query)]
     results = ''.join(lines)
-    prompt = dedent(f"""\
+    prompt = dedent(f"""
         Given the following search results:
         ---
         {results}
@@ -43,30 +33,18 @@ async def search(query):
         if content := part['message']['content']:
             yield content
 
-async def eval_python(expression):
+async def eval_python(script:str):
     """
-    Evaluate a Python script and print the results.
-    Only printed results will be read!
-
-    Args:
-      expression (str): The Python expression to evaluate
-
-    Returns:
-      result (str): Printed output from the script.
+    Evaluate a Python script.
+    Results must be printed to stdout.
     """
 
-    async for line in utils.aexecute_cmd('python', '-c', expression):
+    async for line in utils.aexecute_cmd('python', '-c', script):
         yield line
 
-async def web_text(url):
+async def web_text(url:str):
     """
     Get the text of a webpage.
-
-    Args:
-      url (str): The URL of the webpage
-
-    Returns:
-      text (str): The text of the webpage
     """
     async for line in utils.aexecute_cmd('w3m', '-dump', '-cols', '9999', '-F', '-m', url):
         yield line
